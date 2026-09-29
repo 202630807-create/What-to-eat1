@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘 뭐 먹지?</title>
+<style>
+:root{
+  --ink:#191F28; --sub:#6B7684; --mute:#8B95A1; --line:#E5E8EB; --bg:#F2F4F6; --bg2:#F9FAFB; --white:#FFFFFF;
+  --green:#00A34F; --green-hi:#00C853; --green-tint:#E8F9EF; --star:#FFB800;
+  --r:20px;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  letter-spacing:-.02em;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;letter-spacing:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--green-hi);outline-offset:2px}
+.app{position:relative;display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;background:var(--white);overflow:hidden}
+.app.gray{background:var(--bg)}
+@media (min-width:600px){
+  body{display:grid;place-items:center}
+  .app{height:min(780px,calc(100% - 48px));border-radius:32px;box-shadow:0 8px 40px rgba(25,31,40,.08)}
+}
+/* top */
+.top{flex:none;padding:14px 20px 0}
+.row{display:flex;align-items:center;height:36px;gap:8px}
+.back{width:36px;height:36px;margin-left:-8px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:var(--ink)}
+.back:hover{background:var(--bg)}
+.back[hidden]{visibility:hidden;display:grid}
+.brand{font-size:15px;font-weight:700;color:var(--mute)}
+.pbar{height:4px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:6px}
+.pbar i{display:block;height:100%;width:25%;background:var(--green-hi);border-radius:4px;transition:width .45s cubic-bezier(.3,.7,.2,1)}
+/* stage */
+.stage{flex:1;overflow-y:auto;padding:28px 20px 24px;-webkit-overflow-scrolling:touch}
+.in-next{animation:inN .4s cubic-bezier(.2,.8,.2,1) both}
+.in-prev{animation:inP .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes inN{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes inP{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+h1{margin:0;font-size:26px;line-height:1.4;font-weight:800}
+.desc{margin:8px 0 0;color:var(--sub);font-size:16px;line-height:1.5}
+.list{display:grid;gap:10px;margin-top:28px}
+.item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:18px 18px;border-radius:var(--r);
+  background:var(--bg2);border:2px solid transparent;font-size:18px;font-weight:600;transition:background .15s,border-color .15s,transform .1s}
+.item:active{transform:scale(.98)}
+.item .ic{flex:none;width:44px;height:44px;border-radius:14px;background:var(--white);display:grid;place-items:center;font-size:24px}
+.item .tx{flex:1}
+.item small{display:block;margin-top:2px;font-size:14px;font-weight:400;color:var(--sub)}
+.item .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent;font-size:14px;font-weight:800}
+.item[aria-pressed="true"]{background:var(--green-tint);border-color:var(--green-hi)}
+.item[aria-pressed="true"] .ck{background:var(--green-hi);border-color:var(--green-hi);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.chip{padding:11px 18px;border-radius:99px;background:var(--bg);font-size:16px;font-weight:600;color:var(--sub);border:2px solid transparent;transition:.15s}
+.chip[aria-pressed="true"]{background:var(--green-tint);border-color:var(--green-hi);color:var(--green)}
+.field{margin-top:20px}
+.field label{display:block;font-size:14px;color:var(--sub);margin-bottom:8px;font-weight:600}
+.txt{width:100%;padding:16px 18px;border-radius:16px;border:2px solid transparent;background:var(--bg2);font:inherit;font-size:17px;color:var(--ink);letter-spacing:inherit}
+.txt:focus{border-color:var(--green-hi);background:#fff;outline:0}
+.txt::placeholder{color:#B0B8C1}
+/* bottom */
+.bottom{flex:none;padding:12px 20px 20px;background:linear-gradient(to top,#fff 70%,rgba(255,255,255,0))}
+.app.gray .bottom{background:linear-gradient(to top,var(--bg) 70%,rgba(242,244,246,0))}
+.cta{width:100%;height:58px;border-radius:18px;background:var(--green);color:#fff;font-size:18px;font-weight:700;transition:background .15s,transform .1s}
+.cta:hover:not(:disabled){background:#008F44}
+.cta:active:not(:disabled){transform:scale(.98)}
+.cta:disabled{background:var(--line);color:#B0B8C1;cursor:not-allowed}
+.cta.ghost{background:var(--white);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.cta.ghost:hover{background:var(--bg2)}
+.cta-stack{display:grid;gap:8px}
+/* result */
+.chips-sum{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tag{padding:6px 12px;border-radius:99px;background:var(--white);color:var(--sub);font-size:13px;font-weight:600}
+.card{display:flex;gap:16px;background:var(--white);border-radius:24px;padding:22px 20px;margin-top:12px;box-shadow:0 2px 12px rgba(25,31,40,.05);animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}
+.card .no{flex:none;width:32px;height:32px;border-radius:50%;background:var(--green-tint);color:var(--green);font-weight:800;display:grid;place-items:center;font-size:15px}
+.card .body{flex:1;min-width:0}
+.card h2{margin:0;font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card p{margin:8px 0 12px;color:var(--sub);font-size:15px;line-height:1.55}
+.stars{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--star)}
+.stars .off{color:var(--line)}
+.stars b{color:var(--ink);font-size:14px;font-weight:700;margin-left:2px}
+.stars span.n{font-size:13px;color:var(--mute)}
+.hint{text-align:center;color:var(--mute);font-size:13px;margin:16px 0 4px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <div class="row"><button class="back" id="back" aria-label="이전 단계" hidden>‹</button><span class="brand">오늘 뭐 먹지?</span></div>
+    <div class="pbar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1"><i id="fill"></i></div>
+  </div>
+  <main class="stage" id="stage" aria-live="polite"></main>
+  <div class="bottom" id="bottom"></div>
+</div>
+
+<script>
+/* ---------- 선택지 ---------- */
+const OCC=[["평범한 날","🌤️","특별한 일 없는 하루"],["누군가의 생일","🎂","축하가 필요한 날"],["기념일","💐","기억하고 싶은 날"],["스트레스 풀고 싶은 날","💥","확 풀어버리고 싶어요"],["집들이/파티","🎉","여럿이 즐기는 자리"]];
+const WHO=[["혼자","🙋"],["연인과 함께","💑"],["친구들과","🧑‍🤝‍🧑"],["가족과","👨‍👩‍👧"],["직장 동료와","💼"]];
+const CHIPS=["없음","갑각류","견과류","매운 음식","오이","유제품","해산물","돼지고기","소고기","밀가루","계란"];
+const HUNGER=[["1단계","출출한 정도 · 가벼운 음식","🥱"],["2단계","조금 배고파요","🙂"],["3단계","적당히 배고파요","😋"],["4단계","꽤 배고파요","🤤"],["5단계","배가 너무 고픔 · 든든한 헤비 메뉴","😵"]];
+
+/* ---------- 음식 데이터 (o:상황, w:동행, h:[최소,최대 허기], x:제외 재료, d:설명) ---------- */
+const O={평:"평범한 날",생:"누군가의 생일",기:"기념일",스:"스트레스 풀고 싶은 날",파:"집들이/파티"};
+const W={혼:"혼자",연:"연인과 함께",친:"친구들과",가:"가족과",동:"직장 동료와"};
+const FOODS=[
+{n:"김밥",e:"🍙",o:"평",w:"혼가",h:[1,2],x:["계란","오이"],d:"간편하고 부담 없이 즐길 수 있어요"},
+{n:"샌드위치",e:"🥪",o:"평",w:"혼연동",h:[1,2],x:["밀가루","계란","유제품"],d:"가볍게 한 끼 채우기 좋아요"},
+{n:"샐러드 & 수프",e:"🥗",o:"평기",w:"혼연",h:[1,1],x:["견과류","유제품"],d:"산뜻하게 속을 채워줘요"},
+{n:"우동",e:"🍜",o:"평",w:"혼동가",h:[2,3],x:["밀가루","해산물"],d:"따뜻한 국물로 마음이 편안해져요"},
+{n:"비빔밥",e:"🍚",o:"평",w:"혼가동",h:[2,3],x:["계란","오이","매운 음식","소고기"],d:"영양 균형이 좋은 든든한 한 그릇이에요"},
+{n:"떡볶이",e:"🌶️",o:"평스",w:"혼친연",h:[2,3],x:["매운 음식","밀가루"],d:"매콤달콤한 맛이 기분 전환에 좋아요"},
+{n:"돈까스",e:"🍛",o:"평생",w:"혼가친",h:[3,4],x:["돼지고기","밀가루","계란"],d:"누구나 좋아하는 바삭한 맛이에요"},
+{n:"제육볶음 정식",e:"🍲",o:"평",w:"동혼친",h:[3,5],x:["돼지고기","매운 음식"],d:"밥 한 공기 뚝딱 비우게 돼요"},
+{n:"김치찌개",e:"🥘",o:"평",w:"동가혼",h:[3,4],x:["돼지고기","매운 음식"],d:"모두가 무난하게 좋아하는 집밥 맛이에요"},
+{n:"쌀국수",e:"🍜",o:"평",w:"혼연친",h:[2,3],x:["소고기","오이"],d:"따뜻하고 깔끔한 국물이 일품이에요"},
+{n:"초밥",e:"🍣",o:"기생",w:"연가동",h:[2,4],x:["해산물","오이"],d:"정갈하고 고급스러운 분위기를 낼 수 있어요"},
+{n:"파스타",e:"🍝",o:"기생평",w:"연친가",h:[2,4],x:["밀가루","유제품","해산물","계란"],d:"분위기 있게 즐기기 좋아요"},
+{n:"스테이크",e:"🥩",o:"기생",w:"연가",h:[4,5],x:["소고기"],d:"특별한 날에 어울리는 근사한 메뉴예요"},
+{n:"리조또",e:"🍽️",o:"기",w:"연친",h:[2,3],x:["유제품","해산물"],d:"크리미하고 부드러워 여유로운 식사에 잘 맞아요"},
+{n:"피자",e:"🍕",o:"생파스",w:"친가동",h:[3,5],x:["밀가루","유제품"],d:"나눠 먹으며 분위기를 띄우기 좋아요"},
+{n:"치킨",e:"🍗",o:"파스평",w:"친가동혼",h:[3,5],x:[],d:"함께 뜯으면 즐거움이 두 배가 돼요"},
+{n:"삼겹살",e:"🥓",o:"파스생",w:"친동가",h:[4,5],x:["돼지고기"],d:"고기 굽는 재미로 대화가 끊이지 않아요"},
+{n:"소고기 구이",e:"🍖",o:"기생파",w:"가연동",h:[4,5],x:["소고기"],d:"든든하고 풍성해서 축하 자리에 잘 어울려요"},
+{n:"마라탕",e:"🍲",o:"스평",w:"친혼동",h:[3,5],x:["매운 음식","견과류","돼지고기"],d:"얼얼한 매운맛으로 스트레스가 풀려요"},
+{n:"불닭 & 매운 곱창",e:"🔥",o:"스",w:"친혼",h:[3,5],x:["매운 음식","돼지고기"],d:"화끈하게 매워서 답답함이 날아가요"},
+{n:"쭈꾸미 볶음",e:"🐙",o:"스",w:"친동연",h:[3,5],x:["매운 음식","해산물"],d:"매콤한 양념에 밥까지 싹싹 비벼 먹게 돼요"},
+{n:"닭갈비",e:"🍳",o:"스평",w:"친연동",h:[3,5],x:["매운 음식","유제품"],d:"철판에 볶아 먹는 즐거움이 있어요"},
+{n:"부대찌개",e:"🍢",o:"스파평",w:"친동가",h:[3,5],x:["매운 음식","돼지고기","유제품","밀가루"],d:"푸짐하게 끓여 다 같이 먹기 좋아요"},
+{n:"훠궈",e:"♨️",o:"파생스",w:"친연동",h:[3,5],x:["견과류","해산물","소고기","매운 음식"],d:"각자 취향대로 골라 먹는 재미가 있어요"},
+{n:"타코 & 부리토",e:"🌮",o:"파평",w:"친혼",h:[2,4],x:["밀가루","유제품","매운 음식"],d:"손으로 집어 먹는 편안한 파티 음식이에요"},
+{n:"회 & 해물탕",e:"🐟",o:"생기파",w:"가동친",h:[3,5],x:["해산물","갑각류","매운 음식"],d:"신선한 바다 맛으로 자리를 풍성하게 해요"},
+{n:"딤섬",e:"🥟",o:"기평파",w:"연가친",h:[2,3],x:["돼지고기","밀가루","갑각류","해산물"],d:"조금씩 다양하게 맛보기 좋아요"},
+{n:"카레",e:"🍛",o:"평",w:"혼가동",h:[2,4],x:["유제품","매운 음식"],d:"향긋하고 따뜻해서 든든해요"},
+{n:"샤브샤브",e:"🫕",o:"평기생",w:"가연동",h:[2,4],x:["소고기","밀가루"],d:"담백하고 건강하게 즐기는 따끈한 식사예요"},
+{n:"케이크 & 브런치",e:"🧁",o:"생기",w:"연친가",h:[1,2],x:["유제품","밀가루","계란","견과류"],d:"달콤하게 축하 분위기를 채워줘요"},
+{n:"아이스크림 & 와플",e:"🧇",o:"생스평",w:"연친혼",h:[1,1],x:["유제품","밀가루","계란"],d:"달콤한 디저트로 기분을 올려줘요"},
+{n:"토스트 & 죽",e:"🥣",o:"평",w:"혼",h:[1,2],x:["밀가루","계란","유제품"],d:"속이 편안한 가벼운 한 끼예요"},
+{n:"곱도리탕 & 오리백숙",e:"🍗",o:"파생기",w:"가친동",h:[4,5],x:["매운 음식"],d:"푸짐하게 나눠 먹는 보양식 느낌이에요"}
+];
+
+/* ---------- 상태 ---------- */
+const S={step:0,occ:null,who:null,avoid:new Set(),custom:"",hunger:null,seen:new Set(),view:"form"};
+const $=s=>document.querySelector(s);
+const stage=$("#stage"),bottom=$("#bottom"),back=$("#back");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- 단계 렌더 ---------- */
+const TITLES=[
+ ["오늘 어떤 날인가요?","오늘의 분위기에 맞춰 골라드릴게요"],
+ ["누구와 함께 드시나요?","함께하는 사람에 따라 메뉴가 달라져요"],
+ ["못 먹는 음식이 있나요?","해당하는 건 모두 골라 주세요"],
+ ["지금 얼마나 배고픈가요?","배고픈 정도에 맞춰 양을 조절해요"]];
+function item(ic,t,sub,pressed,i){
+  return `<button class="item" data-i="${i}" aria-pressed="${pressed}"><span class="ic">${ic}</span><span class="tx">${t}${sub?`<small>${sub}</small>`:""}</span><span class="ck">✓</span></button>`;
+}
+function stepHTML(n){
+  const [t,d]=TITLES[n];let body="";
+  if(n===0)body=`<div class="list">${OCC.map((o,i)=>item(o[1],o[0],o[2],S.occ===i,i)).join("")}</div>`;
+  if(n===1)body=`<div class="list">${WHO.map((o,i)=>item(o[1],o[0],"",S.who===i,i)).join("")}</div>`;
+  if(n===2)body=`<div class="chips">${CHIPS.map(c=>`<button class="chip" aria-pressed="${S.avoid.has(c)}">${c}</button>`).join("")}</div>
+    <div class="field"><label for="custom">직접 입력</label><input class="txt" id="custom" maxlength="60" placeholder="예: 돼지고기, 밀가루" value="${esc(S.custom)}"></div>`;
+  if(n===3)body=`<div class="list">${HUNGER.map((o,i)=>item(o[2],o[0],o[1],S.hunger===i+1,i)).join("")}</div>`;
+  return `<h1>${t}</h1><p class="desc">${d}</p>${body}`;
+}
+function canNext(){
+  return [S.occ!==null,S.who!==null,S.avoid.size>0||S.custom.trim()!=="",S.hunger!==null][S.step];
+}
+function render(dir){
+  const app=$("#app");app.classList.remove("gray");S.view="form";
+  stage.className="stage";void stage.offsetWidth;
+  stage.innerHTML=`<div class="${dir==="prev"?"in-prev":"in-next"}">${stepHTML(S.step)}</div>`;
+  stage.scrollTop=0;
+  $("#fill").style.width=(S.step+1)*25+"%";
+  document.querySelector(".pbar").setAttribute("aria-valuenow",S.step+1);
+  document.querySelector(".pbar").style.display="";
+  back.hidden=S.step===0;
+  bottom.innerHTML=`<button class="cta" id="next"></button>`;
+  updateCta();bind();
+}
+function updateCta(){
+  const b=$("#next");if(!b)return;
+  b.disabled=!canNext();b.textContent=S.step===3?"메뉴 추천받기":"다음";
+  b.onclick=()=>canNext()&&(S.step===3?showResult(true):go(S.step+1));
+}
+function go(n){const dir=n>S.step?"next":"prev";S.step=n;render(dir)}
+function bind(){
+  const items=stage.querySelectorAll(".item");
+  items.forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(S.step===0)S.occ=i;if(S.step===1)S.who=i;if(S.step===3)S.hunger=i+1;
+    items.forEach(x=>x.setAttribute("aria-pressed",x===b));updateCta();
+    if(S.step<2)setTimeout(()=>{if(S.view==="form"&&(S.step===0?S.occ===i:S.who===i))go(S.step+1)},260);
+  });
+  const chips=stage.querySelectorAll(".chip");
+  chips.forEach(c=>c.onclick=()=>{
+    const t=c.textContent;
+    if(t==="없음"){S.avoid.clear();S.custom="";$("#custom").value="";S.avoid.add("없음")}
+    else{S.avoid.delete("없음");S.avoid.has(t)?S.avoid.delete(t):S.avoid.add(t)}
+    chips.forEach(x=>x.setAttribute("aria-pressed",S.avoid.has(x.textContent)));updateCta();
+  });
+  const inp=$("#custom");
+  if(inp){
+    inp.oninput=()=>{S.custom=inp.value;if(inp.value.trim()){S.avoid.delete("없음");chips.forEach(x=>x.setAttribute("aria-pressed",S.avoid.has(x.textContent)))}updateCta()};
+    inp.onkeydown=e=>{if(e.key==="Enter"&&canNext())go(3)};
+  }
+}
+back.onclick=()=>S.step>0&&go(S.step-1);
+
+/* ---------- 추천 알고리즘 ---------- */
+const OK=Object.keys(O),WK=Object.keys(W);
+function avoidList(){
+  const a=[...S.avoid].filter(v=>v!=="없음");
+  const extra=S.custom.split(/[,，\s、]+/).map(s=>s.trim()).filter(Boolean);
+  return [...a,...extra];
+}
+const blocked=(f,av)=>av.some(a=>f.x.some(x=>x.includes(a)||a.includes(x))||f.n.includes(a)||f.d.includes(a));
+function score(f){
+  let s=0;
+  if(f.o.includes(OK[S.occ]))s+=3;
+  if(f.w.includes(WK[S.who]))s+=3;
+  const [lo,hi]=f.h,H=S.hunger;
+  s+=(H>=lo&&H<=hi)?2:-Math.min(Math.abs(H-lo),Math.abs(H-hi))*1.5;
+  return s;
+}
+function pick(){
+  const av=avoidList();
+  let pool=FOODS.filter(f=>!blocked(f,av));
+  if(pool.length<3)pool=FOODS.slice(0,3);
+  let fresh=pool.filter(f=>!S.seen.has(f.n));
+  if(fresh.length<3){S.seen.clear();fresh=pool}
+  const top=fresh.map(f=>({f,base:score(f),r:score(f)+Math.random()*2.6})).sort((a,b)=>b.r-a.r).slice(0,3);
+  top.forEach(t=>S.seen.add(t.f.n));
+  return top;
+}
+function reason(f){
+  const occ={평:"평범한 하루에",생:"생일을 축하하는 자리에서",기:"특별한 기념일에",스:"스트레스를 날리고 싶은 날",파:"파티 분위기를 살리기에"}[OK[S.occ]];
+  const who={혼:"혼자서 편하게",연:"연인과 함께",친:"친구들과 함께",가:"가족과 함께",동:"동료들과 함께"}[WK[S.who]];
+  const H=S.hunger,[lo,hi]=f.h;
+  const fit=H>=lo&&H<=hi?(H<=2?"가볍게 먹기 딱 좋은":H>=4?"배부르게 채워주는":"적당히 든든한"):(H<lo?"조금 더 든든하게 먹고 싶을 때 좋은":"부담을 덜어 먹기 좋은");
+  return `${occ} ${who} 즐기기 ${f.o.includes(OK[S.occ])?"어울리는":"괜찮은"} ${fit} 메뉴예요. ${f.d}.`;
+}
+function stars(r){
+  const full=Math.round(r);
+  return `<div class="stars" aria-label="적합도 ${r.toFixed(1)}점 만점에 5점"><span>${"★".repeat(full)}<span class="off">${"★".repeat(5-full)}</span></span><b>${r.toFixed(1)}</b><span class="n">/ 5.0</span></div>`;
+}
+
+/* ---------- 결과 ---------- */
+function showResult(fresh){
+  if(fresh)S.seen.clear();
+  S.view="result";
+  const picks=pick(),av=avoidList();
+  $("#app").classList.add("gray");
+  document.querySelector(".pbar").style.display="none";
+  back.hidden=true;
+  const tags=[OCC[S.occ][0],WHO[S.who][0],av.length?"제외: "+av.join(", "):"제한 없음","허기 "+S.hunger+"/5"];
+  stage.innerHTML=`<div class="in-next"><h1>오늘은 이 메뉴 어때요?</h1>
+    <div class="chips-sum">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    <div id="cards" style="margin-top:8px">${picks.map(({f,base},i)=>{
+      const r=Math.max(3.2,Math.min(5,3.4+(base/8)*1.6+Math.random()*.15));
+      return `<article class="card"><span class="no">${i+1}</span><div class="body"><h2>${f.n}<span aria-hidden="true">${f.e}</span></h2><p>${esc(reason(f))}</p>${stars(r)}</div></article>`}).join("")}</div>
+    <p class="hint">같은 조건에서 아직 안 본 메뉴로 다시 골라 드려요</p></div>`;
+  stage.scrollTop=0;
+  bottom.innerHTML=`<div class="cta-stack"><button class="cta" id="reroll">다른 메뉴 추천받기 (다시 돌리기)</button><button class="cta ghost" id="restart">처음으로 돌아가기</button></div>`;
+  $("#reroll").onclick=()=>showResult(false);
+  $("#restart").onclick=()=>{S.occ=S.who=S.hunger=null;S.avoid.clear();S.custom="";S.seen.clear();S.step=0;render("prev")};
+}
+render("next");
+</script>
+</body>
+</html>
